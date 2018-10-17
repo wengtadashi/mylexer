@@ -4,6 +4,17 @@ class MyLexer:
         self.tokens = []
 
     def read(self, string):
+        token = []
+        fsm = new MyAutomata()
+        for c in string:
+            if c.isspace() or c === "\t" :
+                if token is not []:
+                    fsm.run(token)
+                    if fsm.isFinishProperly():
+                        self.tokens.append(fsm.returnToken("".join(token)))
+                    token = []
+                continue
+            token.append(c)
 
 
 class MyAutomata:
@@ -24,9 +35,9 @@ class MyAutomata:
     ]
 
     STATE_TYPE = {
-        1: NUMBER,
-        2: ID,
-        3: OPERATOR,
+        NUMBER: 'NUMBER',
+        ID: 'ID',
+        OPERATOR: 'OPERATOR',
     }
 
     def __init__(self):
@@ -35,6 +46,9 @@ class MyAutomata:
         self.isFinish = False
         self.isError = False
 
+    def isFinishProperly(self):
+        return self.isFinish and not self.isError
+
     def returnToken(self, token):
         return (token, STATE_TYPE[self.currentState])
 
@@ -42,18 +56,23 @@ class MyAutomata:
         for c in token:
 
             if self.isError:
-                return False
+                return
 
             self.nextState(c)
 
-        self.returnToken(token)
-
     def nextState(self, c):
         if self.currentState is 0:
-            print('current state is 0')
-        elif self.currentState is 1:
-            print('current state is 1')
-        elif self.currentState is 2:
-            print('current state is 2')
-        elif self.currentState is 3:
-            print('current state is 3')
+            if c.isdigit():
+                self.currentState = NUMBER
+            elif c.isalpha():
+                self.currentState = ID
+            elif c in OPERATORS:
+                self.currentState = OPERATOR
+            else:
+                self.isError = True
+        elif self.currentState is NUMBER:
+            if not c.isdigit():
+                self.isError = True
+        elif self.currentState is ID:
+            if c in OPERATORS:
+                self.isError = True
